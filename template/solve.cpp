@@ -1,7 +1,7 @@
-#include <iostream>
-#include <fstream>
-#include <string>
 #include "utils.h"
+#include <fstream>
+#include <iostream>
+#include <string>
 
 void solvePart1() {
   std::ifstream ifs("input.txt");
