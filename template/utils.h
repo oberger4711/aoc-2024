@@ -1,6 +1,8 @@
+#include <charconv>
 #include <chrono>
 #include <iomanip>
 #include <iostream>
+#include <string_view>
 #include <vector>
 
 // This file is copied into each day.
@@ -101,4 +103,35 @@ inline std::ostream &operator<<(std::ostream &os,
     os << line << "\n";
   }
   return os;
+}
+
+inline std::ostream &operator<<(std::ostream &os,
+                                const std::vector<int> &nums) {
+  for (const auto num : nums) {
+    os << num << " ";
+  }
+  return os;
+}
+
+template <typename T>
+std::vector<std::vector<T>> parseCSVNumbers(std::ifstream &ifs,
+                                            char delimiter) {
+  std::vector<std::vector<T>> ret;
+  std::string line;
+  while (std::getline(ifs, line)) {
+    std::vector<T> nums;
+    size_t p1 = 0, p2 = 0;
+    do {
+      p2 = std::min(line.length(), line.find(delimiter, p1));
+      const auto sv = std::string_view(line).substr(p1, p2 - p1);
+      T v;
+      if (std::from_chars(sv.data(), sv.data() + sv.length(), v).ec ==
+          std::errc{}) {
+        nums.push_back(v);
+      }
+      p1 = p2 + 1;
+    } while (p1 < line.length());
+    ret.emplace_back(std::move(nums));
+  }
+  return ret;
 }
