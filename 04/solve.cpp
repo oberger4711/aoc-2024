@@ -63,7 +63,7 @@ Data parseFile(std::ifstream &ifs) {
   return data;
 }
 
-int countXMAS(const std::string &str, const std::string& needle) {
+int countXMAS(const std::string &str, const std::string &needle) {
   int count = 0;
   auto s = str.find(needle);
   for (; s != std::string::npos; s = str.find(needle, s + needle.size())) {
