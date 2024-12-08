@@ -3,30 +3,33 @@
 #include <iostream>
 #include <string>
 
-std::vector<std::string> parseFile(std::ifstream &ifs) {
+struct Data {
   std::vector<std::string> lines;
+};
+
+Data parseFile(std::ifstream &ifs) {
+  Data data;
   std::string line;
-  int row = 0;
   while (std::getline(ifs, line)) {
-    lines.push_back(line);
+    data.lines.push_back(line);
   }
-  return lines;
+  return data;
 }
 
-void solvePart1(const std::vector<std::string> &lines) {
+void solvePart1(const Data &data) {
   // TODO
 }
 
-void solvePart2(const std::vector<std::string> &lines) {
+void solvePart2(const Data &data) {
   // TODO
 }
 
 int main() {
   // std::ifstream ifs("input.txt");
   std::ifstream ifs("input_test.txt");
-  const auto lines = parseFile(ifs);
-  measureTime([&lines]() { solvePart1(lines); }, "Part 1");
-  measureTime([&lines]() { solvePart2(lines); }, "Part 2");
+  const auto data = parseFile(ifs);
+  measureTime([&data]() { solvePart1(data); }, "Part 1");
+  measureTime([&data]() { solvePart2(data); }, "Part 2");
   std::cout << "Done.\n";
   return 0;
 }

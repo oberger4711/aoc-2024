@@ -15,6 +15,7 @@
 // or whatever type fits the puzzle best.
 template <typename T> struct Coords_ {
   T row, col;
+  Coords_() = default;
   Coords_(T row_, T col_) : row(row_), col(col_) {}
   Coords_<T> plus(T row_, T col_) { return Coords_<T>(row + row_, col + col_); }
   void plusEquals(T row_, T col_) {
@@ -45,6 +46,14 @@ template <typename T> struct Coords_ {
     col *= scale;
     return *this;
   }
+  Coords_<T> operator/(const T scale) const {
+    return Coords_<T>(row / scale, col / scale);
+  }
+  Coords_<T> &operator/=(const T scale) {
+    row /= scale;
+    col /= scale;
+    return *this;
+  }
   T manhattanDistance() const { return std::abs(row) + std::abs(col); }
 
   static Coords_<T> Up() { return Coords_<T>(-1, 0); }
@@ -56,6 +65,30 @@ template <typename T> struct Coords_ {
 template <typename T>
 inline bool operator==(const Coords_<T> &lhs, const Coords_<T> &rhs) {
   return lhs.row == rhs.row && lhs.col == rhs.col;
+}
+
+// For usage with std::set.
+template <typename T>
+inline bool operator<(const Coords_<T> &lhs, const Coords_<T> &rhs) {
+  if (lhs.row < rhs.row) {
+    return true;
+  } else if (lhs.row == rhs.row) {
+    return lhs.col < rhs.col;
+  } else {
+    return false;
+  }
+}
+
+template <typename T>
+inline std::ostream &operator<<(std::ostream &os, const Coords_<T> &coords) {
+  os << "(r: " << coords.row << ", c: " << coords.col << ")";
+  return os;
+}
+
+template <typename T>
+inline bool inBounds(const Coords_<T> &coords, const Coords_<T> &size) {
+  return (coords.row >= 0 && coords.col >= 0 && coords.row < size.row &&
+          coords.col < size.col);
 }
 
 inline bool isDigit(char ch) { return 0x30 <= ch && ch < 0x3A; }
