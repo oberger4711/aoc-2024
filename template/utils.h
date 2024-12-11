@@ -79,6 +79,13 @@ inline bool operator<(const Coords_<T> &lhs, const Coords_<T> &rhs) {
   }
 }
 
+// For usage with std::unordered_set and std::unordered_map.
+struct CoordsHash {
+  template <typename T> auto operator()(const Coords_<T> &p) const -> size_t {
+    return std::hash<T>{}(p.row) ^ std::hash<T>{}(p.col);
+  }
+};
+
 template <typename T>
 inline std::ostream &operator<<(std::ostream &os, const Coords_<T> &coords) {
   os << "(r: " << coords.row << ", c: " << coords.col << ")";
