@@ -1,5 +1,6 @@
 #include "utils.h"
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <fstream>
@@ -8,6 +9,10 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <optional>
+
+constexpr int ITERATIONS_PART_1 = 25;
+constexpr int ITERATIONS_PART_2 = 75;
 
 using num = long long;
 
@@ -94,14 +99,17 @@ Element getElement(Memory &memory, num base, int iteration);
 
 struct Power {
   Power() = default;
-  Power(num base_) : base(base_) {
-    knownIterations.push_back(1); // Single stone at iteration 0.
+  Power(num base_) : base(base_), knownIterationsSize(1) {
+    knownIterations[0] = 1; // Single stone at iteration 0.
   }
   num getCount(Memory &memory, int iteration);
   void iterate(Memory &memory);
 
   num base;
-  std::vector<num> knownIterations; // iteration -> count
+  // Array is faster than vector here. I got around 40 % speed up.
+  // This is probably because it saves the allocation, indirection and or improves caching.
+  std::array<num, ITERATIONS_PART_2 + 1> knownIterations; // iteration -> count
+  unsigned short knownIterationsSize;
   // TOOD: Try 2 std::optionals which does not use allocation. Might be faster.
   std::vector<Element> lastIterationElements;
 };
@@ -122,14 +130,14 @@ void Element::iterate(Memory &memory) {
 }
 
 num Power::getCount(Memory &memory, int iteration) {
-  while (knownIterations.size() <= iteration) {
+  while (knownIterationsSize <= iteration) {
     iterate(memory);
   }
   return knownIterations[iteration];
 }
 
 void Power::iterate(Memory &memory) {
-  int iteration = knownIterations.size();
+  int iteration = knownIterationsSize;
   num count = 0;
   if (iteration == 1) {
     auto &nextElements = lastIterationElements;
@@ -155,7 +163,8 @@ void Power::iterate(Memory &memory) {
       count += e.count;
     }
   }
-  knownIterations.push_back(count);
+  knownIterations[iteration] = count;
+  ++knownIterationsSize;
 }
 
 std::vector<Element> makeInitialElements(Memory &memory,
