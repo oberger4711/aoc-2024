@@ -6,10 +6,10 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <unordered_map>
-#include <optional>
 
 constexpr int ITERATIONS_PART_1 = 25;
 constexpr int ITERATIONS_PART_2 = 75;
@@ -33,20 +33,7 @@ void printStones(const std::vector<num> &stones) {
   std::cout << "\n";
 }
 
-int getNumDigits(num n) {
-  if (n == 0) {
-    return 1;
-  }
-  return std::log10(n) + 1;
-}
-
-std::pair<num, num> splitStone(num n, int rightDigits) {
-  const num div = std::pow(10, rightDigits);
-  return std::pair<num, num>(n / div, n % div);
-}
-
 void blink(const std::vector<num> &stones, std::vector<num> &nextStones) {
-  // nextStones.reserve(stones.size());
   nextStones.clear();
   for (size_t i = 0; i < stones.size(); ++i) {
     const auto &stone = stones[i];
@@ -56,7 +43,7 @@ void blink(const std::vector<num> &stones, std::vector<num> &nextStones) {
       const int digits = getNumDigits(stone);
       if (digits % 2 == 0) {
         num a, b;
-        std::tie(a, b) = splitStone(stone, digits / 2);
+        std::tie(a, b) = splitNumber(stone, digits / 2);
         nextStones.push_back(a);
         nextStones.push_back(b);
       } else {
@@ -71,7 +58,7 @@ void blink(const std::vector<num> &stones, std::vector<num> &nextStones) {
 void solvePart1(const Data &data) {
   std::vector<num> stones = data.stones;
   std::vector<num> nextStones;
-  for (int round = 0; round < 25; ++round) {
+  for (int round = 0; round < ITERATIONS_PART_1; ++round) {
     blink(stones, nextStones);
     std::swap(stones, nextStones);
     // std::cout << "Blinks: " << round + 1 << ": " << stones.size() << "\n";
@@ -107,11 +94,15 @@ struct Power {
 
   num base;
   // Array is faster than vector here. I got around 40 % speed up.
-  // This is probably because it saves the allocation, indirection and or improves caching.
+  // This is probably because it saves the allocation, indirection and or
+  // improves caching.
+  // With C++ 26 we might better use the std::inplace_vector<>.
   std::array<num, ITERATIONS_PART_2 + 1> knownIterations; // iteration -> count
   unsigned short knownIterationsSize;
-  // TOOD: Try 2 std::optionals which does not use allocation. Might be faster.
-  std::vector<Element> lastIterationElements;
+  // This could also be an array or small vector.
+  // It is also slightly faster to have this inplace apparently.
+  std::optional<Element> firstChildElement;
+  std::optional<Element> secondChildElement;
 };
 
 Element::Element(Memory &memory, num base, int iteration_)
@@ -140,27 +131,30 @@ void Power::iterate(Memory &memory) {
   int iteration = knownIterationsSize;
   num count = 0;
   if (iteration == 1) {
-    auto &nextElements = lastIterationElements;
     if (base == 0) {
-      nextElements.emplace_back(memory, 1, 0);
+      firstChildElement.emplace(memory, 1, 0);
       count = 1;
     } else {
       const int digits = getNumDigits(base);
       if (digits % 2 == 0) {
         num a, b;
-        std::tie(a, b) = splitStone(base, digits / 2);
-        nextElements.emplace_back(memory, a, 0);
-        nextElements.emplace_back(memory, b, 0);
+        std::tie(a, b) = splitNumber(base, digits / 2);
+        firstChildElement.emplace(memory, a, 0);
+        secondChildElement.emplace(memory, b, 0);
         count = 2;
       } else {
-        nextElements.emplace_back(memory, base * 2024, 0);
+        firstChildElement.emplace(memory, base * 2024, 0);
         count = 1;
       }
     }
   } else {
-    for (auto &e : lastIterationElements) {
-      e.iterate(memory);
-      count += e.count;
+    if (firstChildElement) {
+      firstChildElement->iterate(memory);
+      count += firstChildElement->count;
+    }
+    if (secondChildElement) {
+      secondChildElement->iterate(memory);
+      count += secondChildElement->count;
     }
   }
   knownIterations[iteration] = count;
@@ -179,7 +173,7 @@ std::vector<Element> makeInitialElements(Memory &memory,
 void solvePart2(const Data &data) {
   Memory memory;
   auto elements = makeInitialElements(memory, data.stones);
-  for (int round = 0; round < 75; ++round) {
+  for (int round = 0; round < ITERATIONS_PART_2; ++round) {
     for (auto &e : elements) {
       e.iterate(memory);
     }
@@ -189,10 +183,9 @@ void solvePart2(const Data &data) {
     count += e.count;
   }
   std::cout << count << "\n";
-  // Correct: 218279375708592
-  // vector: 35 ms
 }
 
+// Some DIY unit tests.
 void test() {
   assert(getNumDigits(0) == 1);
   assert(getNumDigits(1) == 1);
@@ -205,21 +198,21 @@ void test() {
   assert(getNumDigits(999) == 3);
   assert(getNumDigits(1000) == 4);
   assert(getNumDigits(10000000) == 8);
-  assert(splitStone(123456, 3).first == 123);
-  assert(splitStone(123456, 3).second == 456);
-  assert(splitStone(90, 1).first == 9);
-  assert(splitStone(90, 1).second == 0);
-  assert(splitStone(10, 1).first == 1);
-  assert(splitStone(10, 1).second == 0);
-  assert(splitStone(99910000, 4).first == 9991);
-  assert(splitStone(99910000, 4).second == 0);
+  assert(splitNumber(123456, 3).first == 123);
+  assert(splitNumber(123456, 3).second == 456);
+  assert(splitNumber(90, 1).first == 9);
+  assert(splitNumber(90, 1).second == 0);
+  assert(splitNumber(10, 1).first == 1);
+  assert(splitNumber(10, 1).second == 0);
+  assert(splitNumber(99910000, 4).first == 9991);
+  assert(splitNumber(99910000, 4).second == 0);
 }
 
 int main() {
   // test();
   std::ifstream ifs("input.txt");
+  // std::ifstream ifs("input_test.txt");
   // std::ifstream ifs("input_test1.txt");
-  //  std::ifstream ifs("input_test.txt");
   const auto data = parseFile(ifs);
   measureTime([&data]() { solvePart1(data); }, "Part 1");
   measureTime([&data]() { solvePart2(data); }, "Part 2");
