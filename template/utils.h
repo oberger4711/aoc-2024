@@ -1,9 +1,11 @@
 #include <charconv>
 #include <chrono>
+#include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <string_view>
+#include <type_traits>
 #include <vector>
 
 // This file is copied into each day.
@@ -175,4 +177,18 @@ std::vector<std::vector<T>> parseCSVNumbers(std::ifstream &ifs,
     ret.emplace_back(std::move(nums));
   }
   return ret;
+}
+
+template <typename T> int getNumDigits(T n) {
+  static_assert(std::is_integral_v<T>);
+  if (n == 0) {
+    return 1;
+  }
+  return std::log10(n) + 1;
+}
+
+template <typename T> std::pair<T, T> splitNumber(T n, int rightDigits) {
+  static_assert(std::is_integral_v<T>);
+  const T div = std::pow(10, rightDigits);
+  return std::pair<T, T>(n / div, n % div);
 }
