@@ -3,4 +3,4 @@ These are my solutions for programming problems published on the website [advent
 Not using Copilot or similar for this.
 
 ## Favorite Puzzles
-- Day X:  Summary
+- Day 13:  Cool linear algebra problem related to Ax = b
