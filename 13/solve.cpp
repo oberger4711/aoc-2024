@@ -3,17 +3,13 @@
 // compile.
 
 #include "utils.h"
-#include <array>
 #include <cassert>
 #include <eigen3/Eigen/Dense>
 #include <fstream>
 #include <iostream>
-#include <optional>
-#include <queue>
 #include <string>
 
 using num = long long;
-using Coords = Coords_<num>;
 using Vec2n = Eigen::Vector<num, 2>;
 using Vec2d = Eigen::Vector2d;
 using Mat2d = Eigen::Matrix2d;
@@ -75,7 +71,7 @@ bool asInteger(const Vec2d &x, Vec2n *xInt) {
          std::abs((*xInt)[1] - x[1]) < EPSILON;
 }
 
-void solve(const Data &data, long offset) {
+void solve(const Data &data, num offset) {
   num tokens = 0;
   Vec2n costs(3, 1);
   for (const auto &eq : data.equations) {
