@@ -1,3 +1,4 @@
+#include <array>
 #include <charconv>
 #include <chrono>
 #include <cmath>
@@ -62,6 +63,10 @@ template <typename T> struct Coords_ {
   static Coords_<T> Down() { return Coords_<T>(1, 0); }
   static Coords_<T> Left() { return Coords_<T>(0, -1); }
   static Coords_<T> Right() { return Coords_<T>(0, 1); }
+  static std::array<Coords_<T>, 4> Directions() {
+    return {Coords_<T>::Right(), Coords_<T>::Left(), Coords_<T>::Up(),
+            Coords_<T>::Down()};
+  }
 };
 
 template <typename T>
