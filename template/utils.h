@@ -67,6 +67,10 @@ template <typename T> struct Coords_ {
     return {Coords_<T>::Right(), Coords_<T>::Left(), Coords_<T>::Up(),
             Coords_<T>::Down()};
   }
+  static std::array<Coords_<T>, 4> InverseDirections() {
+    return {Coords_<T>::Left(), Coords_<T>::Right(), Coords_<T>::Down(),
+            Coords_<T>::Up()};
+  }
 };
 
 template <typename T>
@@ -96,6 +100,19 @@ struct CoordsHash {
 template <typename T>
 inline std::ostream &operator<<(std::ostream &os, const Coords_<T> &coords) {
   os << "(r: " << coords.row << ", c: " << coords.col << ")";
+  return os;
+}
+
+template <typename T>
+inline std::ostream &operator<<(std::ostream &os,
+                                const std::vector<Coords_<T>> &coords) {
+  for (size_t i = 0; i < coords.size(); ++i) {
+    const auto &c = coords[i];
+    os << "(r: " << c.row << ", c: " << c.col << ")";
+    if (i + 1 != coords.size()) {
+      os << ", ";
+    }
+  }
   return os;
 }
 
