@@ -71,30 +71,57 @@ bool asInteger(const Vec2d &x, Vec2n *xInt) {
          std::abs((*xInt)[1] - x[1]) < EPSILON;
 }
 
+Vec2d solveSimple(const Equation &eq) {
+  Vec2d x;
+  const auto r1 =
+      (static_cast<double>(eq.p[1] * eq.v1[0]) / eq.v1[1]) - eq.p[0];
+  const auto r2 =
+      (static_cast<double>(eq.v2[1] * eq.v1[0]) / eq.v1[1]) - eq.v2[0];
+  if (r2 != 0) {
+    const auto t = r1 / r2;
+    const auto s = (eq.p[0] - t * eq.v2[0]) / eq.v1[0];
+    x << s, t;
+    // std::cout << "simple: x = " << x.transpose() << "\n";
+  } else {
+    std::cout << "Not solvable\n";
+  }
+  return x;
+}
+
+// This was my first solution. Does basically the same thing but more
+// complicated.
+Vec2d solveAxb(const Equation &eq) {
+  Vec2d x;
+  // Transform problem to Ax = b and solve for x with libEigen.
+  // A = (v1 v2)
+  // b = p
+  // We need to transform the integers to floating point numbers.
+  // This means we have to deal with a bit of conversion issues.
+  Mat2d a;
+  // clang-format off
+    a.col(0) = eq.v1.cast<double>();
+    a.col(1) = eq.v2.cast<double>();
+  // clang-format on
+  const Vec2d b = eq.p.cast<double>();
+  auto lu = a.fullPivLu();
+  x = lu.solve(b);
+  if (lu.rank() != 2) {
+    std::cout << "Not full rank!\n";
+  }
+  return x;
+}
+
 void solve(const Data &data, num offset) {
   num tokens = 0;
   Vec2n costs(3, 1);
   for (const auto &eq : data.equations) {
-    // Transform problem to Ax = b and solve for x with libEigen.
-    // A = (v1 v2)
-    // b = p
-    // We need to transform the integers to floating point numbers.
-    // This means we have to deal with a bit of conversion issues.
-    Mat2d a;
-    // clang-format off
-    a.col(0) = eq.v1.cast<double>();
-    a.col(1) = eq.v2.cast<double>();
-    // clang-format on
-    const Vec2d b = eq.p.cast<double>() + Vec2d(offset, offset);
-    auto lu = a.fullPivLu();
-    const Vec2d x = lu.solve(b);
-    if (lu.rank() != 2) {
-      std::cout << "Not full rank!\n";
-    } else {
-      Vec2n xInt;
-      if (asInteger(x, &xInt)) {
-        tokens += xInt.dot(costs);
-      }
+    Equation eqOffset = eq;
+    eqOffset.p += Vec2n(offset, offset);
+    const auto x = solveSimple(eqOffset);
+    // const auto x = solveAxb(eqOffset);
+    Vec2n xInt;
+    if (asInteger(x, &xInt)) {
+      tokens += xInt.dot(costs);
     }
   }
   std::cout << tokens << "\n";

@@ -4,4 +4,3 @@ Not using Copilot or similar for this.
 
 ## Favorite Puzzles
 - Day 11:  Using a recursive data structure
-- Day 13:  Cool linear algebra problem related to Ax = b
